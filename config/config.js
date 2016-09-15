@@ -2,6 +2,7 @@ module.exports = {
     'Env': {
         'development': {
             'Database': 'mongodb://127.0.0.1/CyberFarming',
+            'Image': 'http://www.spyderonlines.com/images/wallpapers/free-farm-wallpaper/free-farm-wallpaper-23.jpg',
             'Redis': {
                 'Host': '127.0.0.1',
                 'Port': 6379

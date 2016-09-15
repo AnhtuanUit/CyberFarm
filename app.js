@@ -6,21 +6,24 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
 /* DECLARE MORE REQUIRE */
-var config = require('./config/config');
 var fs = require('fs');
 var mongoose = require('mongoose');
+var config = require('./config/config');
 var expressJwt = require('express-jwt');
 
 /* --- */
 
-var routes = require('./routes/index');
-var users = require('./routes/users');
-
 var app = express();
 
 /* INITIALIZATION DATA */
+
+//update process
+if (!process.env.NODE_ENV) {
+  process.env.NODE_ENV = 'development';
+}
+
 //connect mongodb
-mongoose.connect(config.Env.development.Database);
+mongoose.connect(config.Env[process.env.NODE_ENV].Database);
 
 //run models first
 fs.readdirSync('./models').forEach(function(file) {
@@ -42,15 +45,15 @@ app.use(function(req, res, next) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE, CONNECT');
   res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Authorization');
   res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
+  res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
 
-    // Intercept OPTIONS method
-    if (req.method === 'OPTIONS') {
-      res.sendStatus(200);
-    } else {
-      next();
-    }
-  });
+  // Intercept OPTIONS method
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 /* --- */
 
@@ -66,8 +69,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', routes);
-app.use('/users', users);
+app.use('/', require('./routes/index'));
+app.use('/users', require('./routes/users'));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
