@@ -5,8 +5,10 @@ var NodesController = require('../controllers/nodes');
 
 /* POST */
 router.post('/createNodes', NodesController.createNodes);
-router.post('/produceNode', NodesController.produceNode);
-router.post('/activeNode', NodesController.produceNode);
+
+/* PUT */
+router.put('/produceNode', NodesController.produceNode);
+router.put('/activeNode', NodesController.activeNode);
 
 /* CONTROL SYSTEM WITH API INSTEAD SOCKETIO */
 router.post('/controlAllDevices', NodesController.controlAllDevices);
