@@ -5,53 +5,6 @@ var Utilities = require('../config/utilities');
 var jwt = require('jsonwebtoken');
 var async = require('async');
 
-
-// Middleware
-exports.queryLeanUser = function(req, res, next, id) {
-    Utilities.validateObjectId(id, function(isValid) {
-        if (!isValid) {
-            return res.status(404).jsonp(Utilities.response({}, 'Invalid user id', 404));
-        } else {
-            var populateFields = (req.user._id === id) ? Config.Populate.UserFull : Config.Populate.User;
-            Users.findOne({
-                '_id': id,
-                'status': Config.User.Status.Active
-            }).lean().select(populateFields).exec(function(err, user) {
-                if (err) {
-                    return res.jsonp(Utilities.response({}, Utilities.getErrorMessage(req, err)));
-                } else if (!user) {
-                    return res.status(404).jsonp(Utilities.response({}, 'User not found', 404));
-                } else {
-                    req.userData = user;
-                    return next();
-                }
-            });
-        }
-    });
-};
-
-exports.queryUser = function(req, res, next, id) {
-    Utilities.validateObjectId(id, function(isValid) {
-        if (!isValid) {
-            return res.status(404).jsonp(Utilities.response({}, 'Invalid user id', 404));
-        } else {
-            Users.findOne({
-                '_id': id,
-                'status': Config.User.Status.Active
-            }).exec(function(err, user) {
-                if (err) {
-                    return res.jsonp(Utilities.response({}, Utilities.getErrorMessage(req, err)));
-                } else if (!user) {
-                    return res.status(404).jsonp(Utilities.response({}, 'User not found', 404));
-                } else {
-                    req.userData = user;
-                    return next();
-                }
-            });
-        }
-    });
-};
-
 // Register an account
 exports.signup = function(req, res) {
     var user;
@@ -111,10 +64,6 @@ exports.signup = function(req, res) {
         }
     });
 };
-
-
-
-
 
 // Do login
 exports.login = function(req, res) {
@@ -176,3 +125,10 @@ exports.login = function(req, res) {
     });
 };
 
+exports.changePassword = function (req, res) {
+    res.jsonp(Utilities.response({}, "changePassword"));
+}
+
+exports.updateProfile = function (req, res) {
+    res.jsonp(Utilities.response({}, "updateProfile"));
+}

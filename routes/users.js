@@ -7,8 +7,9 @@ var UsersController = require('../controllers/users');
 router.post('/signup', UsersController.signup);
 router.post('/login', UsersController.login);
 
-/* MIDDLEWARE */
-router.param('leanUserId', UsersController.queryLeanUser); // Lean
-router.param('userId', UsersController.queryUser); // Object
+/* PUT */
+router.put('/changePassword/:userId', UsersController.changePassword);
+router.put('/updateProfile/:userId', UsersController.updateProfile);
 
+/* MIDDLEWARE */
 module.exports = router;
