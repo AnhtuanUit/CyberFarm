@@ -26,5 +26,25 @@ module.exports = {
             'Admin': 1,
             'User': 2
         }
+    },
+    'Device': {
+        'Type': {
+            'Gateway': 1,
+            'Van': 2,
+            'Motor': 3,
+            'Sensor': 4
+        },
+        'MAC': {
+            'Prefix': 'cf',
+            'Format': ':',
+            'Case': 'lowercase',
+            'Type': {
+                'Gateway': '01',
+                'Van': '02',
+                'Motor': '03',
+                'Sensor': '04'
+            }
+        }
     }
+    
 };

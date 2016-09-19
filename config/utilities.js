@@ -1,8 +1,9 @@
 
 
 var Underscore = require('underscore');
-
 var Config = require('./config');
+var mongoose = require('mongoose');
+var async = require('async');
 
 var checkForHexRegExp = new RegExp('^[0-9a-fA-F]{24}$');
 
@@ -33,8 +34,45 @@ exports.getErrorMessage = function(req, err) {
     return errText;
 };
 
-exports.createMAC = function (nodeId, callback) {
-    return callback(nodeId);
+exports.generateMAC  = function (type, callback) { 
+    var suffixes, MAC;
+    var MACformat = '';
+    async.series({
+        createSuffixes: function (cb) {
+            var min = 268435456, max = 4294967295;
+            suffixes = Math.floor(Math.random() * (max - min + 1) + min).toString(16);
+            return cb(null);
+        },
+        getMACtype: function(cb) {
+            getMACtype(type, function (MACtype) {
+                MAC = Config.Device.MAC.Prefix + MACtype + suffixes;
+                console.log(MAC);
+                return cb(!MACtype, 'Type of device not correct');
+            }); 
+        },
+        formatMAC: function(cb) {
+            var MAClength  = MAC.length;
+            for (i = 0; i < MAClength; i+=2) {
+                if((MAClength - i) <= 2) {
+                    MACformat += MAC.slice(i, i+2);
+                    return cb(null);
+                } else {
+                    MACformat += MAC.slice(i, i+2);
+                    MACformat += Config.Device.MAC.Format;
+                }
+            }
+            return cb(true, 'MAC cannot format');
+        }
+    }, function(err, results) {
+        if (err) {
+            var keys = Object.keys(results);
+            var last = keys[keys.length - 1];
+            return callback(true, results[last]);
+        } else {
+            return callback(null, MACformat);
+        }
+    });
+
 }
 
 exports.extendObject = function(obj1, obj2) {
@@ -52,3 +90,20 @@ exports.pickFields = function(obj, fields) {
         return result;
     }
 };
+
+function getMACtype(type, callback) {
+    switch(type) {
+        case Config.Device.Type.Gateway:
+        return callback(Config.Device.MAC.Type.Gateway);
+        break;
+        case Config.Device.Type.Van:
+        return callback(Config.Device.MAC.Type.Van);
+        case Config.Device.Type.Motor:
+        return callback(Config.Device.MAC.Type.Motor);
+        case Config.Device.Type.Sensor:
+        return callback(Config.Device.MAC.Type.Sensor);
+        break;
+        default:
+        return callback(null);
+    }
+}

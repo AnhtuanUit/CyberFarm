@@ -22,11 +22,10 @@ var NodeSchema = new Schema({
         type: Boolean,
         default: false
     },
-    isProduced: {
-        type: Boolean,
-        default: false
+    createdAt: {
+        type: Date,
+        default: Data.now
     },
-    producedAt: Date,
     activedAt: Date
 }, {
     collection: 'nodes'

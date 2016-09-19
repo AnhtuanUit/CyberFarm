@@ -1,4 +1,5 @@
+var s = '123456';
+var s1= s.substring(1, 4);
+console.log(s1);
+console.log(s);
 
-var yourNumber = 10000000;
-hexString = yourNumber.toString(16);
-console.log(hexString);

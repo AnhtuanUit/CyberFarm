@@ -23,7 +23,15 @@ exports.createNodes = function(req, res) {
 		},
 		createNodeObject: function(cb) {
 			node = new Nodes(req.body);
-			return cb(null);
+			node.userId = userId;
+			Utilities.generateMAC(node.type, function (err, MAC) {
+				if (!err) {
+					node.MAC = MAC;
+					return cb(null);
+				} else {
+					return cb(true, 'Cannot create MAC');
+				}
+			});
 		},
 		save: function(cb) {
 			node.save(function(err) {
@@ -32,18 +40,6 @@ exports.createNodes = function(req, res) {
 				} else {
 					return cb(null);
 				}
-			});
-		},
-		addMAC: function (cb) {
-			Utilities.createMAC(node._id, function (MAC) {
-				node.MAC = MAC;
-				node.save(function (err) {
-					if(err) {
-						return cb(true, Utilities.getErrorMessage(req, err));
-					} else {
-						return cb(null);
-					}
-				});
 			});
 		}
 	}, function(err, results) {
@@ -54,8 +50,8 @@ exports.createNodes = function(req, res) {
 		} else {
 			return res.jsonp(Utilities.response({
 				_id: node._id,
-				type: node.type,
-				MAC: node.MAC
+				MAC: node.MAC,
+				type: node.type
 			}));
 		}
 	});
