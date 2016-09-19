@@ -55,12 +55,11 @@ exports.createNodes = function(req, res) {
 		}
 	});
 }
-exports.produceNode = function(req, res) {
-	res.jsonp(Utilities.response({}, "produceNode"));
-};
 
-exports.activeNode = function(req, res) {
-	res.jsonp(Utilities.response({}, "activeNode"));
+exports.addNode = function(req, res) {
+	async.series({
+
+	});
 };
 
 /* FUNCTION FOR SOCKETIO */
