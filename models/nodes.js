@@ -8,7 +8,9 @@ var NodeSchema = new Schema({
     },
     type: { /*1.gateway 2.nodeVan 3.nodeMotor 4.nodeSensor*/
         type: Number,
-        required: true
+        required: true,
+        min: 1,
+        max: 4
     },
     MAC: {
         type: String

@@ -9,15 +9,16 @@ var DeviceSchema = new Schema({
     },
     type: {
         type: Number,
-        required: true
+        required: true,
+        min: 2,
+        max: 4
     },
-    time: {
-        type: Number,
-        required: true
-    },
+    time: Number,
     process: {
         type: Number,
-        default: 0
+        default: 0,
+        min: 0,
+        max: 10
     },
     createdAt: {
         type: Date,

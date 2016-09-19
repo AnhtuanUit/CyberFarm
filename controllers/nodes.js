@@ -23,12 +23,12 @@ exports.createNodes = function(req, res) {
 		},
 		createNodeObject: function(cb) {
 			node = new Nodes(req.body);
-			Utilities.generateMAC(node.type, function (err, MAC) {
+			Utilities.generateMAC(node.type, function (err, result) {
 				if (!err) {
-					node.MAC = MAC;
+					node.MAC = result;
 					return cb(null);
 				} else {
-					return cb(true, 'Cannot create MAC');
+					return cb(true, result);
 				}
 			});
 		},
@@ -78,4 +78,18 @@ exports.controlOffAllNodes = function (req, res) {
 
 exports.disconnectUpdate = function (req, res) {
 	res.jsonp(Utilities.response({}, "disconnectUpdate"));
+}
+
+exports.updateNode = function (req, res) {
+	var MAC = req.params.MAC;
+	var userId = req.user._id;
+	
+	Nodes.findOneAndUpdate({MAC: MAC}, {userId: userId}
+		, function (err, device) {
+			if(!err && device) {
+				res.jsonp(Utilities.response(device));
+			} else {
+				res.jsonp(Utilities.response({}, 'Node cannot update'));
+			}
+		});
 }

@@ -41,7 +41,9 @@ var UserSchema = new Schema({
     address: String,
     gender: {  /*1: Male, 2: Female*/
         type: Number,
-        default: 1
+        default: 1,
+        min: 1,
+        max: 2
     },
     role: {  /*1: Admin, 2: User, 3: ...*/
         type: Number,

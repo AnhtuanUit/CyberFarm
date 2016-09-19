@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var Devices = mongoose.model('Devices');
 var Utilities = require('../config/utilities');
+var async = require('async');
 
 exports.updateProcess = function(req, res) {
 	res.jsonp(Utilities.response({}, "updateProcess"));
@@ -11,25 +12,28 @@ exports.updateTime = function (req, res) {
 	res.jsonp(Utilities.response({}, "updateTime"));
 }
 
-/*exports.updateDevice = function (MAC, userId, callback) {
-	Devices.findOneAndUpdate({MAC: MAC},{userId: userId}
-		,function (err, device) {
-			return callback(err, device);
-		});
-	}*/
-
-	exports.updateDevice = function (req, res) {
-		var MAC = req.params.MAC;
-		console.log(MAC);
-		var userId = req.user._id;
-		Devices.findOne({_id: MAC}, function (err, device) {
-			if(!err && device) {
-				console.log(device);
-				device.userId = userId;
-				device.save();
-				res.jsonp(Utilities.response(device));
-			} else {
-				res.jsonp(Utilities.response({}));
-			}
-		});
-	}
+exports.createDevice = function (req, res) {
+	var device, msg;
+	async.series({
+		createDeviceObject: function(cb) {
+			device = new Devices(req.body);
+			return cb(null);
+		},
+		save: function(cb) {
+			device.save(function(err) {
+				if (err) {
+					msg = Utilities.getErrorMessage(req, err);
+					return cb(true);
+				} else {
+					return cb(null);
+				}
+			});
+		}	
+	}, function(err, results) {
+		if (err) {
+			return res.jsonp(Utilities.response({}, msg));
+		} else {
+			return res.jsonp(Utilities.response(device));
+		}
+	});
+}
