@@ -27,8 +27,6 @@ var validatePassword = function(value, callback) {
 var UserSchema = new Schema({
     username: {
         type: String,
-        unique: true,
-        required: true,
         trim: true
     },
     hashed_password: {
@@ -37,7 +35,11 @@ var UserSchema = new Schema({
         validate: [validatePassword, 'Password cannot be blank']
     },
     salt: String,
-    phone: String,
+    phone: {
+        type: String,
+        unique: true,
+        required: true
+    },
     address: String,
     gender: {  /*1: Male, 2: Female*/
         type: Number,

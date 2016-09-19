@@ -7,7 +7,7 @@ var NodesController = require('../controllers/nodes');
 router.post('/createNodes', NodesController.createNodes);
 
 /* PUT */
-router.put('/activeNode', NodesController.activeNode);
+router.put('/addNode/:MACgateway', NodesController.addNode);
 router.put('/updateNode/:MAC', NodesController.updateNode);
 
 /* CONTROL SYSTEM WITH API INSTEAD SOCKETIO */

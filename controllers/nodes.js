@@ -7,7 +7,7 @@ var Config = require('../config/config');
 exports.createNodes = function(req, res) {
 	var userId = req.user._id;
 	var number = req.body.number;
-	var node;
+	var node, msg;
 	async.series({
 		isAdmin: function (cb) {
 			mongoose.model('Users').findOne({
@@ -17,7 +17,8 @@ exports.createNodes = function(req, res) {
 				if (!err && admin) {
 					return cb(null);
 				} else {
-					return cb(true, 'Can not access');
+					msg = 'Can not access';
+					return cb(true);
 				}
 			});	
 		},
@@ -28,14 +29,16 @@ exports.createNodes = function(req, res) {
 					node.MAC = result;
 					return cb(null);
 				} else {
-					return cb(true, result);
+					msg = result;
+					return cb(true);
 				}
 			});
 		},
 		save: function(cb) {
 			node.save(function(err) {
 				if (err) {
-					return cb(true, Utilities.getErrorMessage(req, err));
+					msg =  Utilities.getErrorMessage(req, err);
+					return cb(true);
 				} else {
 					return cb(null);
 				}
@@ -43,9 +46,7 @@ exports.createNodes = function(req, res) {
 		}
 	}, function(err, results) {
 		if (err) {
-			var keys = Object.keys(results);
-			var last = keys[keys.length - 1];
-			return res.jsonp(Utilities.response({}, results[last]));
+			return res.jsonp(Utilities.response({}, msg));
 		} else {
 			return res.jsonp(Utilities.response({
 				_id: node._id,
@@ -57,8 +58,49 @@ exports.createNodes = function(req, res) {
 }
 
 exports.addNode = function(req, res) {
+	var MACgateway = req.params.MACgateway ? req.params.MACgateway : '';
+	var MACwireless = req.body.MACwireless ? req.body.MACwireless : '';
+	var type = req.body.type ? req.body.type : '';
+	var _id = req.user._id;
+	var node, msg;
 	async.series({
-
+		checkMACgateway: function (cb) {
+			Nodes.count({$and: [{ MAC: MACgateway }, {type: 1}, {userId: _id}]}
+				, function (err, c) {
+					if (!err && c) {
+						return cb(null);
+					} else {
+						msg = 'Access denied';
+						return cb(true);
+					}
+				});	
+		},
+		checkMACwireless: function (cb) {
+			if (MACwireless == '' || type == '') {
+				msg = 'MACwireless/type cannot blank';
+				return cb(true);
+			} else {
+				return cb(null);
+			}
+		},
+		updateNode: function (cb) {
+			Nodes.findOneAndUpdate({$and: [{ MAC: MACwireless }, {type: type}]}
+				, {userId: _id, isActived: true}
+				, function (err, node) {
+					if (!err && node) {
+						return cb(null);
+					} else {
+						msg = 'Invalid MAC address';
+						return cb(true);
+					}
+				});
+		}
+	}, function (error, result) {
+		if (!error) {
+			return res.jsonp(Utilities.response(node));
+		} else {
+			return res.jsonp(Utilities.response({}, msg));
+		}
 	});
 };
 

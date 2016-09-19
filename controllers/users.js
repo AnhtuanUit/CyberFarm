@@ -51,28 +51,59 @@ exports.queryUser = function(req, res, next, id) {
 
 // Register an account
 exports.signup = function(req, res) {
-    var user;
+    var MAC = req.body.MAC ? req.body.MAC : '';
+    var phone = req.body.phone ? req.body.phone.trim() : '';
+    var user, node, msg;
     async.series({
+        checkMAC: function (cb) {
+            mongoose.model('Nodes').findOne( { $and: [
+                { MAC: MAC }, 
+                {type: 1},
+                {isActived: false}
+                ]}, function (err, gateway) {
+                    if (!err && gateway) {
+                        node = gateway;
+                        return cb(null);
+                    } else {
+                        msg = 'Invalid MAC address';
+                        return cb(true);
+                    }
+                });
+        },
         createUserObject: function(cb) {
-            user = new Users(req.body);
+            user = new Users({
+                phone: phone,
+                password: 'admin'
+            });
             return cb(null);
         },
         save: function(cb) {
             user.save(function(err) {
                 if (err) {
-                    return cb(true, Utilities.getErrorMessage(req, err));
+                    msg = Utilities.getErrorMessage(req, err);
+                    return cb(true);
                 } else {
                     return cb(null);
+                }
+            });
+        },
+        updateGateway: function (cb) {
+            node.userId = user._id;
+            node.save(function (err) {
+                if (!err) {
+                    return cb(null);
+                } else {
+                    msg = 'Gateway cannot add';
+                    return cb(true);
                 }
             });
         },
         token: function(cb) {
             var profile = {
                 _id: user._id,
-                username: user.username,
+                phone: user.phone,
                 avatar: user.avatar,
-                gender: user.gender,
-                role: user.role
+                gender: user.gender
             };
             // Create token
             token = jwt.sign(profile, Config.JWTSecret);
@@ -88,13 +119,11 @@ exports.signup = function(req, res) {
         }
     }, function(err, results) {
         if (err) {
-            var keys = Object.keys(results);
-            var last = keys[keys.length - 1];
-            return res.jsonp(Utilities.response({}, results[last]));
+            return res.jsonp(Utilities.response({}, msg));
         } else {
             return res.jsonp(Utilities.response({
                 '_id': user._id,
-                'username': user.username,
+                'phone': user.phone,
                 'avatar': results.avatar,
                 'token': results.token
             }));
