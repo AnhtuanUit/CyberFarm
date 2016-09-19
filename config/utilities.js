@@ -40,7 +40,8 @@ exports.generateMAC  = function (type, callback) {
     async.series({
         createSuffixes: function (cb) {
             var min = 268435456, max = 4294967295;
-            suffixes = Math.floor(Math.random() * (max - min + 1) + min).toString(16);
+            suffixes = Math.floor(Math.random() * (max - min + 1) + min);
+            suffixes = suffixes.toString(16); /*dec --> hex*/
             return cb(null);
         },
         getMACtype: function(cb) {

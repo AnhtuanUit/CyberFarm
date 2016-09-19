@@ -7,4 +7,7 @@ var DevicesController = require('../controllers/devices');
 router.post('/updateProcess', DevicesController.updateProcess);
 router.post('/updateTime', DevicesController.updateTime);
 
+/* PUT */
+router.put('/updateDevice/:MAC', DevicesController.updateDevice);
+
 module.exports = router;

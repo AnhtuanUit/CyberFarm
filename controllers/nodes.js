@@ -23,7 +23,6 @@ exports.createNodes = function(req, res) {
 		},
 		createNodeObject: function(cb) {
 			node = new Nodes(req.body);
-			node.userId = userId;
 			Utilities.generateMAC(node.type, function (err, MAC) {
 				if (!err) {
 					node.MAC = MAC;
