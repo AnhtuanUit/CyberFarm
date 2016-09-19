@@ -33,6 +33,10 @@ exports.getErrorMessage = function(req, err) {
     return errText;
 };
 
+exports.createMAC = function (nodeId, callback) {
+    return callback(nodeId);
+}
+
 exports.extendObject = function(obj1, obj2) {
     return Underscore.extend(obj1, obj2);
 };

@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var Crypto = require('crypto');
 var Utilities = require('../config/utilities');
-var config = require('../config/config');
+var Config = require('../config/config');
 var async = require('async');
 var sanitizer = require('sanitizer');
 
@@ -39,6 +39,14 @@ var UserSchema = new Schema({
     salt: String,
     phone: String,
     address: String,
+    gender: {  /*1: Male, 2: Female*/
+        type: Number,
+        default: 1
+    },
+    role: {  /*1: Admin, 2: User, 3: ...*/
+        type: Number,
+        default: Config.User.Role.User
+    },
     createdAt: {
         type: Date,
         default: Date.now
@@ -90,23 +98,27 @@ UserSchema.statics = {
         if (user && user.avatar) {
             return callback(user.avatar);
         } else {
-           return callback(config.Env[process.env.NODE_ENV].Image);
-       }
-   },
-   getFullInformations: function(user, userId, callback) {
-    console.log(user._id);
-    
-    var that = this;
-    async.parallel({
-        avatar: function(cb) {
-            that.avatar(user, function(avatar) {
-                return cb(null, avatar);
-            });
+            if (user.gender == 1) {
+                return callback(Config.Env[process.env.NODE_ENV].Image);
+            } else {
+                return callback(Config.Env[process.env.NODE_ENV].Image);
+            }
         }
-    }, function(err, data) {
+    },
+    getFullInformations: function(user, userId, callback) {
+        console.log(user._id);
+
+        var that = this;
+        async.parallel({
+            avatar: function(cb) {
+                that.avatar(user, function(avatar) {
+                    return cb(null, avatar);
+                });
+            }
+        }, function(err, data) {
             // Remove fields
 
-            var removeFields = ['hashed_password', 'salt'];
+            var removeFields = ['hashed_password', 'salt', 'role'];
             if (user._id !== userId) {
                 removeFields.push('email');
                 if (!data.isFollowBack || !data.isFollow) {
@@ -122,21 +134,21 @@ UserSchema.statics = {
             delete data.isFollowBack;
             return callback(Utilities.extendObject(user.toObject(), data));
         });
-},
-detail: function(user, userId, callback) {
-    var that = this;
-    async.parallel({
-        avatar: function(cb) {
-            that.avatar(user, function(avatar) {
-                return cb(null, avatar);
-            });
-        }
-    }, function(err, data) {
+    },
+    detail: function(user, userId, callback) {
+        var that = this;
+        async.parallel({
+            avatar: function(cb) {
+                that.avatar(user, function(avatar) {
+                    return cb(null, avatar);
+                });
+            }
+        }, function(err, data) {
             // Pick fields
             var userInfo = Utilities.pickFields(user, ['_id', 'username', 'avatar']);
             return callback(Utilities.extendObject(userInfo, data));
         });
-}
+    }
 };
 
 module.exports = mongoose.model('Users', UserSchema);

@@ -7,13 +7,12 @@ var NodeSchema = new Schema({
         type: Schema.Types.ObjectId, 
         ref: 'Users' 
     },
-    type: {
+    type: { /*1.gateway 2.nodeVan 3.nodeMotor 4.nodeSensor*/
         type: Number,
         required: true
     },
     MAC: {
-        type: String,
-        required: true
+        type: String
     },
     isConnected: {
         type: Boolean,

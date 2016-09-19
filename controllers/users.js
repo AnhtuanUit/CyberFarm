@@ -5,19 +5,56 @@ var Utilities = require('../config/utilities');
 var jwt = require('jsonwebtoken');
 var async = require('async');
 
+// Middleware
+exports.queryLeanUser = function(req, res, next, id) {
+    Utilities.validateObjectId(id, function(isValid) {
+        if (!isValid) {
+            return res.status(404).jsonp(Utilities.response(false, {}, 'Invalid user id', 404));
+        } else {
+            var populateFields = (req.user._id === id) ? Config.Populate.UserFull : Config.Populate.User;
+            Users.findOne({
+                '_id': id
+            }).lean().select(populateFields).exec(function(err, user) {
+                if (err) {
+                    return res.jsonp(Utilities.response(false, {}, Utilities.getErrorMessage(req, err)));
+                } else if (!user) {
+                    return res.status(404).jsonp(Utilities.response(false, {}, 'User not found', 404));
+                } else {
+                    req.userData = user;
+                    return next();
+                }
+            });
+        }
+    });
+};
+
+exports.queryUser = function(req, res, next, id) {
+    Utilities.validateObjectId(id, function(isValid) {
+        if (!isValid) {
+            return res.status(404).jsonp(Utilities.response(false, {}, 'Invalid user id', 404));
+        } else {
+            Users.findOne({
+                '_id': id
+            }).exec(function(err, user) {
+                if (err) {
+                    return res.jsonp(Utilities.response(false, {}, Utilities.getErrorMessage(req, err)));
+                } else if (!user) {
+                    return res.status(404).jsonp(Utilities.response(false, {}, 'User not found', 404));
+                } else {
+                    req.userData = user;
+                    return next();
+                }
+            });
+        }
+    });
+};
+
 // Register an account
 exports.signup = function(req, res) {
     var user;
     async.series({
         createUserObject: function(cb) {
             user = new Users(req.body);
-            return cb(null);
-        },
-        formatPhoneNumber: function(cb) {
-            // ABCXYZ
-            if (user.phone) {
-                user.phone = user.phone.trim();
-            }
             return cb(null);
         },
         save: function(cb) {
@@ -43,9 +80,9 @@ exports.signup = function(req, res) {
         },
         avatar: function(cb) {
             if (user.gender == 1) {
-                return cb(null, Config.Env[process.env.NODE_ENV].Image + 'male.png');
+                return cb(null, Config.Env[process.env.NODE_ENV].Image);
             } else {
-                return cb(null, Config.Env[process.env.NODE_ENV].Image + 'female.png');
+                return cb(null, Config.Env[process.env.NODE_ENV].Image);
             }
 
         }
@@ -65,16 +102,14 @@ exports.signup = function(req, res) {
     });
 };
 
-// Do login
+/*Do login*/
 exports.login = function(req, res) {
     var username = req.body.username ? req.body.username.toString() : '';
     var password = req.body.password ? req.body.password.toString() : '';
-    // Trim username (email/phone)
+    /*Trim username (email/phone)*/
     username = username.trim();
-    console.log(username);
-    console.log(password);
     var user;
-    // Do functions in series
+    /*Do functions in series*/
     async.series({
         findUser: function(cb) {
             async.parallel({
@@ -125,10 +160,39 @@ exports.login = function(req, res) {
     });
 };
 
-exports.changePassword = function (req, res) {
-    res.jsonp(Utilities.response({}, "changePassword"));
-}
+/*Change password*/
+exports.changePassword = function(req, res) {
+    var oldPassword = req.body.oldPassword ? req.body.oldPassword.toString() : '';
+    var newPassword = req.body.newPassword ? req.body.newPassword.toString() : '';
+    var user = req.userData;
+    /*Check old password, if not correct, return*/
+    if (!user.checkLogin(oldPassword)) {
+        return res.jsonp(Utilities.response(false, {}, 'Old password was not correct'));
+    } else {
+        /*Generate new password hash*/
+        var newHashedPassword = user.hashPassword(newPassword, user.salt);
+        user.update({
+            'hashed_password': newHashedPassword
+        }, function(err) {
+            if (err) {
+                return res.jsonp(Utilities.response({}, Utilities.getErrorMessage(req, err)));
+            } else {
+                return res.jsonp(Utilities.response({}, 'Change password successfully'));
+            }
+        });
+    }
+};
+
 
 exports.updateProfile = function (req, res) {
-    res.jsonp(Utilities.response({}, "updateProfile"));
+    var userId = req.user._id;
+    var user = req.userData;
+
+    user.update(req.body, function (err) {
+        if(!err) {
+            return res.jsonp(Utilities.response({}, 'Update profile success'));
+        } else {
+            return res.jsonp(Utilities.response({}, Utilities.getErrorMessage(req, err)));
+        }   
+    });
 }
