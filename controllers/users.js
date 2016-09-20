@@ -133,18 +133,18 @@ exports.signup = function(req, res) {
 
 /*Do login*/
 exports.login = function(req, res) {
-    var username = req.body.username ? req.body.username.toString() : '';
+    var phone = req.body.phone ? req.body.phone.toString() : '';
     var password = req.body.password ? req.body.password.toString() : '';
-    /*Trim username (email/phone)*/
-    username = username.trim();
-    var user;
+    /*Trim phone (email/phone)*/
+    phone = phone.trim();
+    var user, msg;
     /*Do functions in series*/
     async.series({
         findUser: function(cb) {
             async.parallel({
                 findByUsername: function(cb1) {
                     Users.findOne({
-                        'username': username
+                        'phone': phone
                     })
                     .select('-__v -createdAt')
                     .exec(function(err, u) {
@@ -155,11 +155,13 @@ exports.login = function(req, res) {
                     });
                 }
             }, function() {
-                return cb(!user, 'Incorrect email/phone number or password');
+                msg =  'Incorrect phone number or password';
+                return cb(!user);
             });
         },
         checkPassword: function(cb) {
-            return cb(!user.checkLogin(password), 'Incorrect email/phone number or password');
+            msg = 'Incorrect phone number or password';
+            return cb(!user.checkLogin(password));
         },
         getUserInformations: function(cb) {
             Users.getFullInformations(user, null, function(data) {
@@ -170,7 +172,7 @@ exports.login = function(req, res) {
         createToken: function(cb) {
             var profile = {
                 _id: user._id,
-                username: user.username,
+                phone: user.phone,
                 avatar: user.avatar,
             };
             // Create token
@@ -180,9 +182,7 @@ exports.login = function(req, res) {
         }
     }, function(err, results) {
         if (err) {
-            var keys = Object.keys(results);
-            var last = keys[keys.length - 1];
-            return res.jsonp(Utilities.response({}, results[last]));
+            return res.jsonp(Utilities.response({}, msg));
         } else {
             return res.jsonp(Utilities.response(user));
         }
@@ -216,8 +216,15 @@ exports.changePassword = function(req, res) {
 exports.updateProfile = function (req, res) {
     var userId = req.user._id;
     var user = req.userData;
-
-    user.update(req.body, function (err) {
+    var username = req.body.username ? req.body.username : '';
+    var address = req.body.address ? req.body.address : '';
+    var gender  = req.body.gender ? req.body.gender : '';
+    
+    user.update({
+        username: username,
+        address: address,
+        gender: gender
+    }, function (err) {
         if(!err) {
             return res.jsonp(Utilities.response({}, 'Update profile success'));
         } else {

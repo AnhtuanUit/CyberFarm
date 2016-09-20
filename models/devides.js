@@ -13,6 +13,8 @@ var DeviceSchema = new Schema({
         min: 2,
         max: 4
     },
+    name: String,
+    location: String,
     time: Number,
     process: {
         type: Number,

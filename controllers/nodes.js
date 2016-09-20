@@ -17,7 +17,7 @@ exports.createNodes = function(req, res) {
 				if (!err && admin) {
 					return cb(null);
 				} else {
-					msg = 'Can not access';
+					msg = 'Do not permission';
 					return cb(true);
 				}
 			});	
@@ -62,7 +62,7 @@ exports.addNode = function(req, res) {
 	var MACwireless = req.body.MACwireless ? req.body.MACwireless : '';
 	var type = req.body.type ? req.body.type : '';
 	var _id = req.user._id;
-	var node, msg;
+	var nodeId, msg;
 	async.series({
 		checkMACgateway: function (cb) {
 			Nodes.count({$and: [{ MAC: MACgateway }, {type: 1}, {userId: _id}]}
@@ -88,12 +88,24 @@ exports.addNode = function(req, res) {
 				, {userId: _id, isActived: true}
 				, function (err, node) {
 					if (!err && node) {
+						nodeId = node._id;
 						return cb(null);
 					} else {
 						msg = 'Invalid MAC address';
 						return cb(true);
 					}
 				});
+		},
+		addDefaultDevice: function (cb) {
+			for (var i = 1; i <= 2; i++) {
+				var device = new mongoose.model('Devices')({
+					nodeId: nodeId,
+					type: type,
+					name: i
+				});
+				device.save();
+			}
+			return cb(null);
 		}
 	}, function (error, result) {
 		if (!error) {
@@ -103,6 +115,22 @@ exports.addNode = function(req, res) {
 		}
 	});
 };
+
+
+
+exports.updateNode = function (req, res) {
+	var MAC = req.params.MAC;
+	var userId = req.user._id;
+	
+	Nodes.findOneAndUpdate({MAC: MAC}, {userId: userId}
+		, function (err, device) {
+			if(!err && device) {
+				res.jsonp(Utilities.response(device));
+			} else {
+				res.jsonp(Utilities.response({}, 'Node cannot update'));
+			}
+		});
+}
 
 /* FUNCTION FOR SOCKETIO */
 exports.controlAllDevices = function (req, res) {
@@ -119,18 +147,4 @@ exports.controlOffAllNodes = function (req, res) {
 
 exports.disconnectUpdate = function (req, res) {
 	res.jsonp(Utilities.response({}, "disconnectUpdate"));
-}
-
-exports.updateNode = function (req, res) {
-	var MAC = req.params.MAC;
-	var userId = req.user._id;
-	
-	Nodes.findOneAndUpdate({MAC: MAC}, {userId: userId}
-		, function (err, device) {
-			if(!err && device) {
-				res.jsonp(Utilities.response(device));
-			} else {
-				res.jsonp(Utilities.response({}, 'Node cannot update'));
-			}
-		});
 }
