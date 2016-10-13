@@ -16,9 +16,9 @@ exports.queryLeanUser = function(req, res, next, id) {
                 '_id': id
             }).lean().select(populateFields).exec(function(err, user) {
                 if (err) {
-                    return res.jsonp(Utilities.response(false, {}, Utilities.getErrorMessage(req, err)));
+                    return res.jsonp(Utilities.response({}, Utilities.getErrorMessage(req, err)));
                 } else if (!user) {
-                    return res.status(404).jsonp(Utilities.response(false, {}, 'User not found', 404));
+                    return res.status(404).jsonp(Utilities.response({}, 'User not found', 404));
                 } else {
                     req.userData = user;
                     return next();
@@ -31,15 +31,15 @@ exports.queryLeanUser = function(req, res, next, id) {
 exports.queryUser = function(req, res, next, id) {
     Utilities.validateObjectId(id, function(isValid) {
         if (!isValid) {
-            return res.status(404).jsonp(Utilities.response(false, {}, 'Invalid user id', 404));
+            return res.status(404).jsonp(Utilities.response({}, 'Invalid user id', 404));
         } else {
             Users.findOne({
                 '_id': id
             }).exec(function(err, user) {
                 if (err) {
-                    return res.jsonp(Utilities.response(false, {}, Utilities.getErrorMessage(req, err)));
+                    return res.jsonp(Utilities.response({}, Utilities.getErrorMessage(req, err)));
                 } else if (!user) {
-                    return res.status(404).jsonp(Utilities.response(false, {}, 'User not found', 404));
+                    return res.status(404).jsonp(Utilities.response({}, 'User not found', 404));
                 } else {
                     req.userData = user;
                     return next();
@@ -216,15 +216,11 @@ exports.changePassword = function(req, res) {
 exports.updateProfile = function (req, res) {
     var userId = req.user._id;
     var user = req.userData;
-    var username = req.body.username ? req.body.username : '';
-    var address = req.body.address ? req.body.address : '';
-    var gender  = req.body.gender ? req.body.gender : '';
-    
-    user.update({
-        username: username,
-        address: address,
-        gender: gender
-    }, function (err) {
+
+    var fields = ['username', 'address', 'gender'];
+    var newProfile = Utilities.pickFields(req.body, fields);
+
+    user.update(req.body, function (err) {
         if(!err) {
             return res.jsonp(Utilities.response({}, 'Update profile success'));
         } else {
